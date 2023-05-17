@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 public interface Metrics {
 
     /**
-     * Records a call.
+     * Records a call. 记录调用 生成快照
      *
      * @param duration     the duration of the call
      * @param durationUnit the time unit of the duration

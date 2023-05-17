@@ -473,18 +473,34 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     private interface CircuitBreakerState {
 
+        /**
+         * 是否允许请求通过
+         * @return
+         */
         boolean tryAcquirePermission();
 
         void acquirePermission();
 
         void releasePermission();
 
+        /**
+         * 请求调用失败，记录指标
+         * 到达设定的度量指标值后，调用状态机实例 触发状态转换
+         *
+         * @param duration
+         * @param durationUnit
+         * @param throwable
+         */
         void onError(long duration, TimeUnit durationUnit, Throwable throwable);
 
         void onSuccess(long duration, TimeUnit durationUnit);
 
         void handlePossibleTransition(CircuitBreakerConfig.TransitionCheckResult result);
 
+        /**
+         * 尝试次数
+         * @return
+         */
         int attempts();
 
         CircuitBreaker.State getState();
@@ -493,7 +509,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
         /**
          * Should the CircuitBreaker in this state publish events
-         *
+         * 是否发布事件
          * @return a boolean signaling if the events should be published
          */
         default boolean shouldPublishEvents(CircuitBreakerEvent event) {
@@ -588,6 +604,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         private final AtomicBoolean isClosed;
 
         ClosedState() {
+            // 统计
             this.circuitBreakerMetrics = CircuitBreakerMetrics.forClosed(getCircuitBreakerConfig(), clock);
             this.isClosed = new AtomicBoolean(true);
         }
@@ -617,13 +634,13 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
         @Override
         public void onError(long duration, TimeUnit durationUnit, Throwable throwable) {
-            // CircuitBreakerMetrics is thread-safe
+            // CircuitBreakerMetrics is thread-safe 检查超出阈值
             checkIfThresholdsExceeded(circuitBreakerMetrics.onError(duration, durationUnit));
         }
 
         @Override
         public void onSuccess(long duration, TimeUnit durationUnit) {
-            // CircuitBreakerMetrics is thread-safe
+            // CircuitBreakerMetrics is thread-safe  检查超出阈
             checkIfThresholdsExceeded(circuitBreakerMetrics.onSuccess(duration, durationUnit));
         }
 
@@ -654,6 +671,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         private void checkIfThresholdsExceeded(Result result) {
             if (Result.hasExceededThresholds(result) && isClosed.compareAndSet(true, false)) {
                 publishCircuitThresholdsExceededEvent(result, circuitBreakerMetrics);
+                // 打开状态
                 transitionToOpenState();
             }
         }

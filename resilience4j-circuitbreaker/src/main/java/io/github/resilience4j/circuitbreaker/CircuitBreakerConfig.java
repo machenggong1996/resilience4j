@@ -39,17 +39,27 @@ public class CircuitBreakerConfig implements Serializable {
 
     private static final long serialVersionUID = -5429814941777001669L;
 
+    // 请求调用失败的阈值，百分比。默认是50%
     public static final int DEFAULT_FAILURE_RATE_THRESHOLD = 50; // Percentage
+    // 慢调用的阈值，百分比
     public static final int DEFAULT_SLOW_CALL_RATE_THRESHOLD = 100; // Percentage
+    // 熔断器在打开状态时的持续时间。默认是60秒
     public static final int DEFAULT_WAIT_DURATION_IN_OPEN_STATE = 60; // Seconds
+    // 熔断器在半开状态下 限制调用次数
     public static final int DEFAULT_PERMITTED_CALLS_IN_HALF_OPEN_STATE = 10;
+    // 熔断器在关闭状态下的可以计算失败率的最小值，默认100
     public static final int DEFAULT_MINIMUM_NUMBER_OF_CALLS = 100;
+    // 滑动窗口大小，熔断器在关闭状态下的ring buffer大小
     public static final int DEFAULT_SLIDING_WINDOW_SIZE = 100;
+    // 慢调用的时间，即当服务A调用服务B时，B的执行时间超过了60秒就算作是慢调用
     public static final int DEFAULT_SLOW_CALL_DURATION_THRESHOLD = 60; // Seconds
     public static final int DEFAULT_WAIT_DURATION_IN_HALF_OPEN_STATE = 0; // Seconds. It is an optional parameter
+    // 滑动窗口类型，默认为基于计数的 COUNT_BASED
     public static final SlidingWindowType DEFAULT_SLIDING_WINDOW_TYPE = SlidingWindowType.COUNT_BASED;
     public static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
+    // 是否记录请求调用失败的断言，默认所有异常都记录
     private static final Predicate<Throwable> DEFAULT_RECORD_EXCEPTION_PREDICATE = throwable -> true;
+    // 忽略异常
     private static final Predicate<Throwable> DEFAULT_IGNORE_EXCEPTION_PREDICATE = throwable -> false;
     private static final Function<Clock, Long> DEFAULT_TIMESTAMP_FUNCTION = clock -> System.nanoTime();
     private static final TimeUnit DEFAULT_TIMESTAMP_UNIT = TimeUnit.NANOSECONDS;
@@ -66,8 +76,10 @@ public class CircuitBreakerConfig implements Serializable {
 
     private transient Predicate<Object> recordResultPredicate = DEFAULT_RECORD_RESULT_PREDICATE;
 
+    // 请求调用失败，存储异常记录的集合
     @SuppressWarnings("unchecked")
     private Class<? extends Throwable>[] recordExceptions = new Class[0];
+    // 请求调用失败，忽略异常记录的集合
     @SuppressWarnings("unchecked")
     private Class<? extends Throwable>[] ignoreExceptions = new Class[0];
 
@@ -77,6 +89,9 @@ public class CircuitBreakerConfig implements Serializable {
     private SlidingWindowType slidingWindowType = DEFAULT_SLIDING_WINDOW_TYPE;
     private int minimumNumberOfCalls = DEFAULT_MINIMUM_NUMBER_OF_CALLS;
     private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
+    // 默认为false，是否自动从打开到半开,当waitDurationInOpenState时间一过，是否自动从OPEN切换到HALF_OPEN
+    // true：waitDurationInOpenState到期后open自动变为half_open
+    //false，得等到再有请求后状态才会变为half_open,否则即使waitDurationInOpenState到期状态依然是open
     private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
     private transient IntervalFunction waitIntervalFunctionInOpenState = IntervalFunction
         .of(Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE));

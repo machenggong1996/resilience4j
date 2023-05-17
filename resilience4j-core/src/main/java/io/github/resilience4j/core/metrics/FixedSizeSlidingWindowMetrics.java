@@ -39,7 +39,13 @@ import java.util.concurrent.TimeUnit;
 public class FixedSizeSlidingWindowMetrics implements Metrics {
 
     private final int windowSize;
+    /**
+     * 全部数据 完整统计 进行加减运算
+     */
     private final TotalAggregation totalAggregation;
+    /**
+     * 数组记录请求信息 每一个都是一次调用的数据
+     */
     private final Measurement[] measurements;
     int headIndex;
 

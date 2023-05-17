@@ -188,15 +188,20 @@ public interface CircuitBreaker {
      */
     static <T> Supplier<T> decorateSupplier(CircuitBreaker circuitBreaker, Supplier<T> supplier) {
         return () -> {
+            // 尝试获取权限 没权限会抛出异常
             circuitBreaker.acquirePermission();
             final long start = circuitBreaker.getCurrentTimestamp();
             try {
+                // 执行业务逻辑
                 T result = supplier.get();
+                // 耗时
                 long duration = circuitBreaker.getCurrentTimestamp() - start;
+                // 执行成功
                 circuitBreaker.onResult(duration, circuitBreaker.getTimestampUnit(), result);
                 return result;
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
+                // 执行失败 记录在度量指标里面
                 long duration = circuitBreaker.getCurrentTimestamp() - start;
                 circuitBreaker.onError(duration, circuitBreaker.getTimestampUnit(), exception);
                 throw exception;
